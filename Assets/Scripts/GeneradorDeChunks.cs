@@ -7,6 +7,12 @@ public class GeneradorDeChunks : MonoBehaviour
     public GameObject[] prefabsDeChunk;
     public int chunksActivos = 4;
 
+    [Header("Inicio seguro")]
+    [Tooltip("Arrastra aqui el Chunk_A (el plano).")]
+    public GameObject chunkInicial;
+    [Tooltip("Cuantos chunks planos seguidos salen al empezar.")]
+    public int chunksPlanosAlInicio = 2;
+
     [Header("Depuracion")]
     public bool mostrarAnchos = true;   // imprime el ancho medido en la consola
 
@@ -18,6 +24,7 @@ public class GeneradorDeChunks : MonoBehaviour
     private Camera camara;
     private float siguienteX;
     private int ultimoIndice = -1;   // evita repetir el mismo chunk dos veces seguidas
+    private int chunksCreados = 0;   // cuenta cuantos chunks se han generado en total
 
     void Start()
     {
@@ -58,10 +65,12 @@ public class GeneradorDeChunks : MonoBehaviour
 
         if (bordeDerechoDelChunk < bordeIzquierdoCamara)
         {
+            // Se elimina el chunk viejo y se crea uno NUEVO elegido al azar
             chunks.RemoveAt(0);
-            masViejo.transform.position = new Vector3(siguienteX, 0f, 0f);
-            siguienteX += anchoDeEste;   // avanzamos segun el ancho de ESTE chunk
-            chunks.Add(masViejo);
+            anchos.Remove(masViejo);
+            Destroy(masViejo);
+
+            CrearChunk();
         }
     }
 
@@ -84,11 +93,15 @@ public class GeneradorDeChunks : MonoBehaviour
 
         siguienteX += ancho;
         chunks.Add(nuevo);
+        chunksCreados++;
     }
 
-    // Escoge un prefab al azar, pero nunca el mismo que salio la vez anterior
+    // Los primeros chunks son planos; despues, al azar sin repetir el anterior
     GameObject ElegirPrefab()
     {
+        if (chunkInicial != null && chunksCreados < chunksPlanosAlInicio)
+            return chunkInicial;
+
         if (prefabsDeChunk.Length == 1)
             return prefabsDeChunk[0];
 
